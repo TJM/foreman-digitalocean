@@ -3,11 +3,11 @@ module ForemanDigitalocean
     has_one :key_pair, :foreign_key => :compute_resource_id, :dependent => :destroy
     delegate :flavors, :to => :client
 
-    validates :user, :password, :presence => true
+    validates :password, :presence => true
     before_create :test_connection
 
     after_create :setup_key_pair
-    after_destroy :destroy_key_pair
+    after_destroy :delete_key_pair
 
 
     # Not sure why it would need a url, but OK (copied from ec2)
@@ -31,7 +31,7 @@ module ForemanDigitalocean
 
     def find_vm_by_uuid(uuid)
       client.servers.get(uuid)
-    rescue Fog::Compute::DigitalOcean::Error
+    rescue Fog::Compute::DigitalOceanV2::Error
       raise(ActiveRecord::RecordNotFound)
     end
 
@@ -48,13 +48,14 @@ module ForemanDigitalocean
     end
 
     def regions
-      return [] if user.blank? || password.blank?
+      return [] if password.blank?
       client.regions
+      #client.regions.sort_by{|r| r.slug}
     end
 
     def test_connection(options = {})
       super
-      errors[:user].empty? and errors[:password].empty? and regions.count
+      errors[:password].empty? and regions.count
     rescue Excon::Errors::Unauthorized => e
       errors[:base] << e.response.body
     rescue Fog::Errors::Error => e
@@ -85,7 +86,7 @@ module ForemanDigitalocean
     end
 
     def default_region_name
-      @default_region_name ||= client.regions.get(region.to_i).try(:name)
+      @default_region_name ||= client.regions.find{ |r| r.slug == region.to_s }.try(:name)
     rescue Excon::Errors::Unauthorized => e
       errors[:base] << e.response.body
     end
@@ -95,14 +96,14 @@ module ForemanDigitalocean
     def client
       @client ||= Fog::Compute.new(
         :provider => "DigitalOcean",
-        :digitalocean_client_id => user,
-        :digitalocean_api_key => password,
+        :version => 'v2',
+        :digitalocean_token => password,
       )
     end
 
     def vm_instance_defaults
       super.merge(
-        :flavor_id => client.flavors.first.id
+        :flavor_id => client.flavors.first.slug
       )
     end
 
@@ -118,14 +119,9 @@ module ForemanDigitalocean
       logger.warn "failed to generate key pair"
       logger.error e.message
       logger.error e.backtrace.join("\n")
-      destroy_key_pair
-      raise
-    end
-
-    def destroy_key_pair
-      return unless key_pair
+      delete key_pair
       logger.info "removing DigitalOcean key #{key_pair.name}"
-      client.destroy_ssh_key(ssh_key.id) if ssh_key
+      client.delete_ssh_key(ssh_key.id) if ssh_key
       key_pair.destroy
       true
     rescue => e
