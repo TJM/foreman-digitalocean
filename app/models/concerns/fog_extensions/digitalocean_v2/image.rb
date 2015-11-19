@@ -1,5 +1,5 @@
 module FogExtensions
-  module DigitalOcean
+  module DigitalOceanV2
     module Image
       extend ActiveSupport::Concern
 

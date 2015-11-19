@@ -22,11 +22,11 @@ module ForemanDigitalocean
     end
   end
 
-  require 'fog/digitalocean'
-  require 'fog/digitalocean/models/compute/image'
-  require 'fog/digitalocean/models/compute/server'
-  require File.expand_path('../../../app/models/concerns/fog_extensions/digitalocean/server', __FILE__)
-  require File.expand_path('../../../app/models/concerns/fog_extensions/digitalocean/image', __FILE__)
-  Fog::Compute::DigitalOcean::Image.send(:include, FogExtensions::DigitalOcean::Image)
-  Fog::Compute::DigitalOcean::Server.send(:include, FogExtensions::DigitalOcean::Server)
+  require 'fog/digitalocean/compute_v2'
+  require 'fog/digitalocean/models/compute_v2/image'
+  require 'fog/digitalocean/models/compute_v2/server'
+  require File.expand_path('../../../app/models/concerns/fog_extensions/digitalocean_v2/server', __FILE__)
+  require File.expand_path('../../../app/models/concerns/fog_extensions/digitalocean_v2/image', __FILE__)
+  Fog::Compute::DigitalOceanV2::Image.send(:include, FogExtensions::DigitalOceanV2::Image)
+  Fog::Compute::DigitalOceanV2::Server.send(:include, FogExtensions::DigitalOceanV2::Server)
 end
