@@ -5,6 +5,9 @@
     <%= prop :public_ip_address %>
     <%= prop :private_ip_address %>
     <%= prop :state %>
+    <%= prop :vcpus, 'vCPUs' %>
+    <%= prop :memory, 'Memory' %>
+    <%= prop :features %>
     <%= prop :created_at, 'Created' %>
     <%= prop :image_name, 'Image' if @vm.image.present? %>
     <%= prop :flavor_name, "Type (flavor)" %>

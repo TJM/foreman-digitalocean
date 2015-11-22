@@ -16,6 +16,7 @@ module FogExtensions
       end
 
       def full_name
+	# NOTE this is duplicated in server.rb for now
         requires :distribution, :os_version
         "#{distribution} #{os_version}"
       end

@@ -2,9 +2,30 @@ module FogExtensions
   module DigitalOceanV2
     module Server
       extend ActiveSupport::Concern
+     
+      # Override attribute :memory
+      included do
+        define_method :memory, instance_method(:memory_mb)
+        define_method :memory=, instance_method(:memory_mb=)
+      end
+
+      attr_reader :memory_mb
+      def memory_mb= (value)
+        @memory_mb = value * 1024 * 1024
+      end
+
+      #def memory_mb
+      #  @memory
+      #end
+
+      def private_ip_address
+        if (net = networks['v4'].find { |n| n['type'] == 'private' })
+          net['ip_address']
+        end
+      end
 
       def state
-        :status
+        self.status
       end
 
       def identity_to_s
@@ -34,7 +55,7 @@ module FogExtensions
       #end
 
       def image_name
-	# NOTE this is duplicated in images.rb for now
+	# NOTE this is duplicated in image.rb for now
         @image_name ||= "#{image['distribution']} #{self.image['name']}"
       end
 
